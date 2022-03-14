@@ -1,0 +1,187 @@
+
+https://www.virtualbox.org/wiki/Downloads
+
+
+1. Download (Minikube , Kubectl)
+https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/
+https://minikube.sigs.k8s.io/docs/start/
+
+2. Create directory in C drive
+Place minikube and kubectl
+
+3. Check Version
+minikube version
+
+4. Start Minikube
+minikube start
+
+or
+
+Start with Driver:  https://minikube.sigs.k8s.io/docs/drivers/
+minikube start --driver=docker
+
+5. Check cluster info
+	kubectl cluster-info
+
+6. check nodes
+	kubectl get node
+
+7. How k8s will read docker repository?
+Execute the steps below:
+
+a. minikube docker-env 	(inform's to k8s, which env you are using)
+
+You get following output: (copy only last line without "REM")
+SET DOCKER_TLS_VERIFY=1
+SET DOCKER_HOST=tcp://127.0.0.1:59994
+SET DOCKER_CERT_PATH=C:\Users\bvsra\.minikube\certs
+SET MINIKUBE_ACTIVE_DOCKERD=minikube
+REM To point your shell to minikube's docker-daemon, run:
+REM @FOR /f "tokens=*" %i IN ('minikube -p minikube docker-env') DO @%i
+
+"@FOR /f "tokens=*" %i IN ('minikube -p minikube docker-env') DO @%i"
+
+b. execute "@FOR /f "tokens=*" %i IN ('minikube -p minikube docker-env') DO @%i"
+Note: Now k8s can read your local repository
+
+8. Create docker image of your springboot application
+
+	docker build -t springboot-k8s-demo:1.0 .
+
+*once your docker image is ready you need to create deployment object to deploy your application with kubernetes
+
+
+9. docker images to check k8s images
+Output:
+REPOSITORY                                TAG        IMAGE ID       CREATED         SIZE
+gcr.io/k8s-minikube/storage-provisioner   v5         6e38f40d628d   11 months ago   31.5MB
+k8s.gcr.io/kube-proxy                     v1.20.2    43154ddb57a8   14 months ago   118MB
+k8s.gcr.io/kube-apiserver                 v1.20.2    a8c2fdb8bf76   14 months ago   122MB
+k8s.gcr.io/kube-controller-manager        v1.20.2    a27166429d98   14 months ago   116MB
+k8s.gcr.io/kube-scheduler                 v1.20.2    ed2c44fbdd78   14 months ago   46.4MB
+kubernetesui/dashboard                    v2.1.0     9a07b5b4bfac   15 months ago   226MB
+k8s.gcr.io/etcd                           3.4.13-0   0369cf4303ff   18 months ago   253MB
+k8s.gcr.io/coredns                        1.7.0      bfe3a36ebd25   21 months ago   45.2MB
+kubernetesui/metrics-scraper              v1.0.4     86262685d9ab   23 months ago   36.9MB
+k8s.gcr.io/pause                          3.2        80d28bedfe5d   2 years ago     683kB
+
+10. Create Deployment Object
+
+Two approaches to create deployment object
+Command prompt
+yaml config (will see this later)
+
+Run command:
+	create deployment springboot-k8s --image=docker_image_name:tag --port=8080
+
+11. get deployments
+	kubectl get deployments
+
+12. get deploymnet description/details
+	kubectl describe deployment springboot-k8s(deployment_name)
+
+13. get pods
+	kubectl get pods
+
+14. get logs
+	kubectl logs pod_name
+
+15. How to access app in ui? (Create Service)
+To expose app to outside world, you need service
+
+kubectl get deployments
+
+expose the deployment: (specify the service type)
+	kubectl expose deployment spring-boot-k8s (deployment-name) --type=NodePort
+
+16. Check Services
+	kubectl get service
+
+All the traffic will come to the service Class
+Service class will forward the traffic based on the pods availability
+
+17. Get url
+	minikube service springboot-k8s(service_name) --url
+
+18. Check the health of your app (use minikube dashboard)
+ctrl + c (quit to comeout from previous session)
+
+minikube dashboard
+
+19. Delete all
+delete service springboot-k8s(service_name)
+delete deployment springboot-k8s(deployment_name)
+verify: 
+kubectl get pods [you don't get any pods]
+kubectl get svc
+kubectl get deployments 
+
+20. Stop Minikube
+	minikube stop
+verify: 
+	kubectl get nodes
+
+21. Delete minikube to delete local k8s cluster
+	minikube delete
+
+
+
+-------------------------------------------------------------
+
+Deploy Springboot-Mysql on minikube
+
+Creating Database Pod :
+1. Checkout git repo (sample app)
+2. Start Minikube
+	minikube start --driver=docker
+3. Specify environment 
+	minikube docker-env
+4. apply db service
+	kubectl apply -f db-deploy.yaml
+verify: 
+kubectl get deployments
+kubectl get pods
+kubectl logs podname
+
+5. get inside pod (open interactive terminal with bash shell)
+
+kubectl exec -it pod_name /bin/bash
+kubectl exec -it mysql-844546d7d-dk4k6 /bin/bash
+
+login to mysql: mysql -h mysql -u root -p [root]
+****
+show databases;
+use npci;
+
+Create Application Pod:
+6. package your application
+   mvn clean package [run this command in project directory]
+
+7. Create dockerfile
+8. build docker image
+	docker build -t springboot-crud-k8s:1.0 .
+9. create service and deployment object
+	kubectl apply -f app-deploy.yaml
+
+	
+kubectl delete service springboot-crud-svc
+kubectl delete deployment springboot-crud-deployment
+
+10. Expose 
+kubectl expose deployment spring-boot-k8s (deployment-name) --type=NodePort
+minikube service springboot-k8s(service_name) --url
+
+kubectl get svc
+minikube ip
+
+192.168.49.2:32487
+
+minikube dashboard
+
+
+
+
+
+
+
+
