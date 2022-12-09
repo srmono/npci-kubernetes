@@ -1,13 +1,18 @@
+Repo: https://github.com/srmono/npci-kubernetes
 
 https://www.virtualbox.org/wiki/Downloads
 
+Delete All existing pods:
+>kubectl delete --all pods
 
 1. Download (Minikube , Kubectl)
 https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/
 https://minikube.sigs.k8s.io/docs/start/
 
 2. Create directory in C drive
-Place minikube and kubectl
+Place minikube and kubectl exe files inside the directory
+and 
+set environment variable
 
 3. Check Version
 minikube version
@@ -19,6 +24,10 @@ or
 
 Start with Driver:  https://minikube.sigs.k8s.io/docs/drivers/
 minikube start --driver=docker
+
+To make docker the default driver:
+
+minikube config set driver docker
 
 5. Check cluster info
 	kubectl cluster-info
@@ -32,6 +41,7 @@ Execute the steps below:
 a. minikube docker-env 	(inform's to k8s, which env you are using)
 
 You get following output: (copy only last line without "REM")
+
 SET DOCKER_TLS_VERIFY=1
 SET DOCKER_HOST=tcp://127.0.0.1:59994
 SET DOCKER_CERT_PATH=C:\Users\bvsra\.minikube\certs
@@ -45,13 +55,16 @@ b. execute "@FOR /f "tokens=*" %i IN ('minikube -p minikube docker-env') DO @%i"
 Note: Now k8s can read your local repository
 
 8. Create docker image of your springboot application
-
+- inside springboot-k8s directory
+- check/create dockerfile
+- run 
 	docker build -t springboot-k8s-demo:1.0 .
+
 
 *once your docker image is ready you need to create deployment object to deploy your application with kubernetes
 
 
-9. docker images to check k8s images
+9. docker images  ( to check k8s images)
 Output:
 REPOSITORY                                TAG        IMAGE ID       CREATED         SIZE
 gcr.io/k8s-minikube/storage-provisioner   v5         6e38f40d628d   11 months ago   31.5MB
@@ -73,6 +86,8 @@ yaml config (will see this later)
 
 Run command:
 	create deployment springboot-k8s --image=docker_image_name:tag --port=8080
+	kubectl create deployment springboot-k8s --image=springboot-k8s-demo:1.0 --port=8080
+	
 
 11. get deployments
 	kubectl get deployments
@@ -93,9 +108,10 @@ kubectl get deployments
 
 expose the deployment: (specify the service type)
 	kubectl expose deployment spring-boot-k8s (deployment-name) --type=NodePort
+	kubectl expose deployment spring-boot-k8s --type=NodePort
 
 16. Check Services
-	kubectl get service
+	kubectl get svc 
 
 All the traffic will come to the service Class
 Service class will forward the traffic based on the pods availability
@@ -124,20 +140,22 @@ verify:
 21. Delete minikube to delete local k8s cluster
 	minikube delete
 
-
-
 -------------------------------------------------------------
 
 Deploy Springboot-Mysql on minikube
 
 Creating Database Pod :
 1. Checkout git repo (sample app)
+
 2. Start Minikube
 	minikube start --driver=docker
+
 3. Specify environment 
 	minikube docker-env
+
 4. apply db service
 	kubectl apply -f db-deploy.yaml
+
 verify: 
 kubectl get deployments
 kubectl get pods
@@ -146,7 +164,7 @@ kubectl logs podname
 5. get inside pod (open interactive terminal with bash shell)
 
 kubectl exec -it pod_name /bin/bash
-kubectl exec -it mysql-844546d7d-dk4k6 /bin/bash
+ex:- kubectl exec -it mysql-844546d7d-dk4k6 /bin/bash
 
 login to mysql: mysql -h mysql -u root -p [root]
 ****
@@ -160,16 +178,22 @@ Create Application Pod:
 7. Create dockerfile
 8. build docker image
 	docker build -t springboot-crud-k8s:1.0 .
+
 9. create service and deployment object
 	kubectl apply -f app-deploy.yaml
 
-	
-kubectl delete service springboot-crud-svc
-kubectl delete deployment springboot-crud-deployment
+
 
 10. Expose 
 kubectl expose deployment spring-boot-k8s (deployment-name) --type=NodePort
+kubectl expose deployment springboot-crud-deployment --type=NodePort
+
 minikube service springboot-k8s(service_name) --url
+minikube service springboot-crud-svc --url 
+
+
+kubectl delete service springboot-crud-svc
+kubectl delete deployment springboot-crud-deployment
 
 kubectl get svc
 minikube ip
